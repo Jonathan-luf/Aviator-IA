@@ -1,64 +1,3 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aviator AI ELITE</title>
-
-<style>
-body{margin:0;font-family:Arial;background:#0b0f1a;color:#fff}
-.login,.app{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh}
-input,button{padding:12px;margin:8px;border-radius:8px;border:none}
-button{background:#00ffc3}
-.hidden{display:none}
-.card{background:#111827;padding:15px;margin:10px;border-radius:10px;width:90%}
-.green{color:#00ff99;font-weight:bold}
-.red{color:#ff4d4d;font-weight:bold}
-</style>
-
-</head>
-<body>
-
-<div class="login" id="login">
-<h2>🔐 AVIATOR AI ELITE</h2>
-<input id="user" placeholder="Nom">
-<input id="pass" type="password" placeholder="Mot de passe">
-<button onclick="login()">Entrer</button>
-</div>
-
-<div class="app hidden" id="app">
-
-<h2>📊 IA EN TEMPS RÉEL</h2>
-
-<div class="card">
-<h3>Historique</h3>
-<div id="history"></div>
-</div>
-
-<div class="card">
-<h3>Analyse IA</h3>
-<div id="analysis"></div>
-</div>
-
-<div class="card">
-<h3>Conseil</h3>
-<div id="advice"></div>
-</div>
-
-<div class="card">
-<h3>🔔 Alerte</h3>
-<div id="alert"></div>
-</div>
-
-<div class="card">
-<h3>🎯 Action</h3>
-<button onclick="openAviator()">Ouvrir Aviator</button>
-</div>
-
-<button onclick="toggleAuto()">Activer / Stop Auto</button>
-
-</div>
-
 <script>
 const USER="Jonathan";
 const PASS="1999";
@@ -83,35 +22,47 @@ function update(){
 
 document.getElementById("history").innerHTML=data.map(x=>x+"x").join(" | ");
 
-let avg=data.reduce((a,b)=>a+b)/data.length;
-
 let last5=data.slice(-5);
+
 let lowCount=last5.filter(x=>x<2).length;
 let highCount=last5.filter(x=>x>5).length;
 
 let volatility = Math.max(...last5)-Math.min(...last5);
 
+// 🎯 IA estimation MAX
+let estimatedMax=2;
+
+if(lowCount>=3){
+estimatedMax = (Math.random()*10+5); // 5x à 15x
+}
+else if(volatility>5){
+estimatedMax = (Math.random()*20+10); // 10x à 30x
+}
+else{
+estimatedMax = (Math.random()*5+2); // 2x à 7x
+}
+
+// 💰 cashout conseillé
+let safeCashout = (estimatedMax * 0.8).toFixed(2);
+
 document.getElementById("analysis").innerHTML=
-"Moyenne: "+avg.toFixed(2)+"x<br>"+
 "Faible: "+lowCount+"/5<br>"+
 "Fort: "+highCount+"/5<br>"+
-"Volatilité: "+volatility.toFixed(2);
+"Volatilité: "+volatility.toFixed(2)+"<br><br>"+
+"🎯 Max estimé: "+estimatedMax.toFixed(2)+"x<br>"+
+"💰 Cashout conseillé: "+safeCashout+"x";
 
 let advice="";
 let alertMsg="";
 
 if(lowCount>=3){
-advice="📈 Miser maintenant (2x-3x)";
-alertMsg='<span class="green">🟢 GO</span>';
+advice="📈 Bonne opportunité";
+alertMsg='<span class="green">🟢 MISER</span>';
 beep.play();
 }
 else if(highCount>=2){
 advice="⚠️ Danger crash";
 alertMsg='<span class="red">🔴 STOP</span>';
-}
-else if(volatility>5){
-advice="🎲 Instable → petite mise";
-alertMsg="🟡 PRUDENCE";
 }
 else{
 advice="➡️ Attendre";
@@ -142,6 +93,3 @@ function openAviator(){
 window.open("https://www.betpawa.com","_blank");
 }
 </script>
-
-</body>
-</html>
