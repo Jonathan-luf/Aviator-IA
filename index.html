@@ -3,24 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aviator AI ELITE</title>
+<title>Aviator Expert</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body{margin:0;font-family:Arial;background:#0b0f1a;color:#fff}
-.login,.app{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh}
-input,button{padding:12px;margin:8px;border-radius:8px;border:none}
+.login,.app{display:flex;flex-direction:column;align-items:center;justify-content:center}
+input,button{padding:12px;margin:5px;border-radius:8px;border:none}
 button{background:#00ffc3}
 .hidden{display:none}
 .card{background:#111827;padding:15px;margin:10px;border-radius:10px;width:90%}
-.green{color:#00ff99;font-weight:bold}
-.red{color:#ff4d4d;font-weight:bold}
+.green{color:#00ff99}
+.red{color:#ff4d4d}
+.yellow{color:#ffd966}
+canvas{background:#fff;border-radius:10px}
 </style>
 
 </head>
 <body>
 
 <div class="login" id="login">
-<h2>🔐 AVIATOR AI ELITE</h2>
+<h2>🔐 AVIATOR EXPERT</h2>
 <input id="user" placeholder="Nom">
 <input id="pass" type="password" placeholder="Mot de passe">
 <button onclick="login()">Entrer</button>
@@ -28,7 +32,7 @@ button{background:#00ffc3}
 
 <div class="app hidden" id="app">
 
-<h2>📊 IA EN TEMPS RÉEL</h2>
+<h2>📊 SESSION LIVE</h2>
 
 <div class="card">
 <h3>Historique</h3>
@@ -36,26 +40,24 @@ button{background:#00ffc3}
 </div>
 
 <div class="card">
-<h3>Analyse IA</h3>
-<div id="analysis"></div>
+<h3>Décision IA</h3>
+<div id="decision"></div>
 </div>
 
 <div class="card">
-<h3>Conseil</h3>
-<div id="advice"></div>
+<h3>💰 Score</h3>
+Gains: <span id="gain">0</span> | Pertes: <span id="loss">0</span>
 </div>
 
 <div class="card">
-<h3>🔔 Alerte</h3>
-<div id="alert"></div>
+<h3>📊 Graphique</h3>
+<canvas id="chart"></canvas>
 </div>
 
 <div class="card">
-<h3>🎯 Action</h3>
-<button onclick="openAviator()">Ouvrir Aviator</button>
+<input id="val" placeholder="ex: 2.5" onkeydown="if(event.key==='Enter') add()">
+<button onclick="add()">Ajouter</button>
 </div>
-
-<button onclick="toggleAuto()">Activer / Stop Auto</button>
 
 </div>
 
@@ -63,93 +65,102 @@ button{background:#00ffc3}
 const USER="Jonathan";
 const PASS="1999";
 
-let data=[1.2,2.3,1.4,5.6,1.1,3.2];
-let auto=false;
-let interval;
+let data=[];
+let gain=0;
+let loss=0;
+let historyScore=[];
 
-let beep = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3");
+let chart;
 
 function login(){
-let u=document.getElementById("user").value;
-let p=document.getElementById("pass").value;
-if(u===USER && p===PASS){
-document.getElementById("login").classList.add("hidden");
-document.getElementById("app").classList.remove("hidden");
-update();
-}else alert("Accès refusé");
+if(user.value===USER && pass.value===PASS){
+loginDiv.classList.add("hidden");
+app.classList.remove("hidden");
+initChart();
+}
 }
 
-function update(){
+function initChart(){
+let ctx=document.getElementById("chart");
+chart=new Chart(ctx,{
+type:'line',
+data:{
+labels:[],
+datasets:[{
+label:'Performance',
+data:[],
+borderWidth:2
+}]
+},
+options:{
+responsive:true
+}
+});
+}
 
-document.getElementById("history").innerHTML=data.map(x=>x+"x").join(" | ");
+function add(){
+let v=parseFloat(val.value);
+if(!v) return;
+
+data.push(v);
+if(data.length>10) data.shift();
+
+analyse(v);
+update();
+val.value="";
+}
+
+function analyse(last){
 
 let last5=data.slice(-5);
 
-let lowCount=last5.filter(x=>x<2).length;
-let highCount=last5.filter(x=>x>5).length;
+let low=last5.filter(x=>x<2).length;
+let mid=last5.filter(x=>x>=2 && x<=5).length;
+let high=last5.filter(x=>x>5).length;
 
-let volatility = Math.max(...last5)-Math.min(...last5);
+let msg="";
 
-// 🎯 estimation
-let estimatedMax;
-
-if(lowCount>=3){
-estimatedMax = Math.random()*10+5;
-}else if(volatility>5){
-estimatedMax = Math.random()*20+10;
-}else{
-estimatedMax = Math.random()*5+2;
+// IA plus fine
+if(low>=3 && high===0){
+msg='<span class="green">🟢 ENTRÉE FORTE (2x-3x)</span>';
+gain++;
 }
-
-let safeCashout = (estimatedMax*0.8).toFixed(2);
-
-document.getElementById("analysis").innerHTML=
-"Faible: "+lowCount+"/5<br>"+
-"Fort: "+highCount+"/5<br>"+
-"Volatilité: "+volatility.toFixed(2)+"<br><br>"+
-"🎯 Max estimé: "+estimatedMax.toFixed(2)+"x<br>"+
-"💰 Cashout conseillé: "+safeCashout+"x";
-
-let advice="";
-let alertMsg="";
-
-if(lowCount>=3){
-advice="📈 Bonne opportunité";
-alertMsg='<span class="green">🟢 MISER</span>';
-beep.play();
+else if(high>=2){
+msg='<span class="red">🔴 STOP DANGER</span>';
+loss++;
 }
-else if(highCount>=2){
-advice="⚠️ Danger crash";
-alertMsg='<span class="red">🔴 STOP</span>';
+else if(mid>=3){
+msg='<span class="yellow">🟡 STABLE → PETITE MISE</span>';
 }
 else{
-advice="➡️ Attendre";
-alertMsg="⚪ NEUTRE";
+msg='⚪ ATTENTE';
 }
 
-document.getElementById("advice").innerHTML=advice;
-document.getElementById("alert").innerHTML=alertMsg;
+decision.innerHTML=msg;
+
+// score graphique
+let score = gain - loss;
+historyScore.push(score);
+
+chart.data.labels.push(historyScore.length);
+chart.data.datasets[0].data.push(score);
+chart.update();
 }
 
-function generate(){
-let val=(Math.random()*10+1).toFixed(2);
-data.push(parseFloat(val));
-if(data.length>20) data.shift();
-update();
+function update(){
+history.innerHTML=data.map(x=>x+"x").join(" | ");
+gainEl.innerText=gain;
+lossEl.innerText=loss;
 }
 
-function toggleAuto(){
-auto=!auto;
-if(auto){
-interval=setInterval(generate,3000);
-}else{
-clearInterval(interval);
-}
-}
-
-function openAviator(){
-window.open("https://www.betpawa.com","_blank");
-}
+// refs
+let loginDiv=document.getElementById("login");
+let app=document.getElementById("app");
+let val=document.getElementById("val");
+let history=document.getElementById("history");
+let decision=document.getElementById("decision");
+let gainEl=document.getElementById("gain");
+let lossEl=document.getElementById("loss");
 </script>
 
 </body>
