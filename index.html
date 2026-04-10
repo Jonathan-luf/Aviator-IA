@@ -3,28 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aviator Expert</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>Aviator Assistant Stable</title>
 
 <style>
 body{margin:0;font-family:Arial;background:#0b0f1a;color:#fff}
-.login,.app{display:flex;flex-direction:column;align-items:center;justify-content:center}
+.login,.app{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh}
 input,button{padding:12px;margin:5px;border-radius:8px;border:none}
 button{background:#00ffc3}
 .hidden{display:none}
 .card{background:#111827;padding:15px;margin:10px;border-radius:10px;width:90%}
-.green{color:#00ff99}
-.red{color:#ff4d4d}
+.green{color:#00ff99;font-weight:bold}
+.red{color:#ff4d4d;font-weight:bold}
 .yellow{color:#ffd966}
-canvas{background:#fff;border-radius:10px}
 </style>
 
 </head>
 <body>
 
 <div class="login" id="login">
-<h2>🔐 AVIATOR EXPERT</h2>
+<h2>🔐 AVIATOR STABLE</h2>
 <input id="user" placeholder="Nom">
 <input id="pass" type="password" placeholder="Mot de passe">
 <button onclick="login()">Entrer</button>
@@ -32,16 +29,16 @@ canvas{background:#fff;border-radius:10px}
 
 <div class="app hidden" id="app">
 
-<h2>📊 SESSION LIVE</h2>
+<h2>📊 MODE LIVE RAPIDE</h2>
 
 <div class="card">
 <h3>Historique</h3>
-<div id="history"></div>
+<div id="history">Aucune donnée</div>
 </div>
 
 <div class="card">
 <h3>Décision IA</h3>
-<div id="decision"></div>
+<div id="decision">En attente...</div>
 </div>
 
 <div class="card">
@@ -50,13 +47,19 @@ Gains: <span id="gain">0</span> | Pertes: <span id="loss">0</span>
 </div>
 
 <div class="card">
-<h3>📊 Graphique</h3>
-<canvas id="chart"></canvas>
+<h3>⚡ Entrée rapide</h3>
+<input id="val" placeholder="ex: 2.5" onkeydown="if(event.key==='Enter') add()">
+<button onclick="add()">Ajouter</button><br>
+
+<button onclick="quick(1.2)">1.2</button>
+<button onclick="quick(1.5)">1.5</button>
+<button onclick="quick(2)">2</button>
+<button onclick="quick(3)">3</button>
+<button onclick="quick(5)">5</button>
 </div>
 
 <div class="card">
-<input id="val" placeholder="ex: 2.5" onkeydown="if(event.key==='Enter') add()">
-<button onclick="add()">Ajouter</button>
+<button onclick="openAviator()">🎯 Ouvrir Aviator</button>
 </div>
 
 </div>
@@ -68,49 +71,36 @@ const PASS="1999";
 let data=[];
 let gain=0;
 let loss=0;
-let historyScore=[];
-
-let chart;
 
 function login(){
 if(user.value===USER && pass.value===PASS){
-loginDiv.classList.add("hidden");
-app.classList.remove("hidden");
-initChart();
+document.getElementById("login").classList.add("hidden");
+document.getElementById("app").classList.remove("hidden");
 }
-}
-
-function initChart(){
-let ctx=document.getElementById("chart");
-chart=new Chart(ctx,{
-type:'line',
-data:{
-labels:[],
-datasets:[{
-label:'Performance',
-data:[],
-borderWidth:2
-}]
-},
-options:{
-responsive:true
-}
-});
 }
 
 function add(){
 let v=parseFloat(val.value);
 if(!v) return;
 
-data.push(v);
-if(data.length>10) data.shift();
-
-analyse(v);
-update();
+process(v);
 val.value="";
 }
 
-function analyse(last){
+function quick(v){
+process(v);
+}
+
+function process(v){
+
+data.push(v);
+if(data.length>10) data.shift();
+
+analyse();
+update();
+}
+
+function analyse(){
 
 let last5=data.slice(-5);
 
@@ -120,47 +110,39 @@ let high=last5.filter(x=>x>5).length;
 
 let msg="";
 
-// IA plus fine
+// IA améliorée
 if(low>=3 && high===0){
-msg='<span class="green">🟢 ENTRÉE FORTE (2x-3x)</span>';
+msg='<span class="green">🟢 JOUER (viser 2x)</span>';
 gain++;
 }
 else if(high>=2){
-msg='<span class="red">🔴 STOP DANGER</span>';
+msg='<span class="red">🔴 STOP (risque élevé)</span>';
 loss++;
 }
 else if(mid>=3){
-msg='<span class="yellow">🟡 STABLE → PETITE MISE</span>';
+msg='<span class="yellow">🟡 PETITE MISE</span>';
 }
 else{
-msg='⚪ ATTENTE';
+msg='⚪ ATTENDRE';
 }
 
-decision.innerHTML=msg;
-
-// score graphique
-let score = gain - loss;
-historyScore.push(score);
-
-chart.data.labels.push(historyScore.length);
-chart.data.datasets[0].data.push(score);
-chart.update();
+document.getElementById("decision").innerHTML=msg;
 }
 
 function update(){
-history.innerHTML=data.map(x=>x+"x").join(" | ");
-gainEl.innerText=gain;
-lossEl.innerText=loss;
+document.getElementById("history").innerHTML=data.map(x=>x+"x").join(" | ");
+document.getElementById("gain").innerText=gain;
+document.getElementById("loss").innerText=loss;
+}
+
+function openAviator(){
+window.open("https://www.betpawa.com","_blank");
 }
 
 // refs
-let loginDiv=document.getElementById("login");
-let app=document.getElementById("app");
 let val=document.getElementById("val");
-let history=document.getElementById("history");
-let decision=document.getElementById("decision");
-let gainEl=document.getElementById("gain");
-let lossEl=document.getElementById("loss");
+let user=document.getElementById("user");
+let pass=document.getElementById("pass");
 </script>
 
 </body>
